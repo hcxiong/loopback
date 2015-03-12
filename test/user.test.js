@@ -857,9 +857,9 @@ describe('User', function() {
               assert(user);
               assert.equal(user.email, 'bar@bat.com');
               // let's ensure async execution works on this one
-              setTimeout(function() {
+              process.nextTick(function() {
                 cb('token-123456');
-              }, 0);
+              });
             }
           };
 

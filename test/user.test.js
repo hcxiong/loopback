@@ -853,9 +853,9 @@ describe('User', function() {
             redirect: '/',
             protocol: ctx.req.protocol,
             host: ctx.req.get('host'),
-            tokenGenerator: function(user, cb) {
-              assert(user);
-              assert.equal(user.email, 'bar@bat.com');
+            generateVerificationToken: function(cb) {
+              assert(this);
+              assert.equal(this.email, user.email);
               // let's ensure async execution works on this one
               process.nextTick(function() {
                 cb('token-123456');

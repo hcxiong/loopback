@@ -842,6 +842,50 @@ describe('User', function() {
           });
       });
 
+      it('Verify a user\'s email address with custom token generator', function(done) {
+        User.afterRemote('create', function(ctx, user, next) {
+          assert(user, 'afterRemote should include result');
+
+          var options = {
+            type: 'email',
+            to: user.email,
+            from: 'noreply@myapp.org',
+            redirect: '/',
+            protocol: ctx.req.protocol,
+            host: ctx.req.get('host'),
+            tokenGenerator: function(user, cb) {
+              assert(user);
+              assert.equal(user.email, 'bar@bat.com');
+              // let's ensure async execution works on this one
+              setTimeout(function() {
+                cb('token-123456');
+              }, 0);
+            }
+          };
+
+          user.verify(options, function(err, result) {
+            assert(result.email);
+            assert(result.email.response);
+            assert(result.token);
+            assert.equal(result.token, 'token-123456');
+            var msg = result.email.response.toString('utf-8');
+            assert(~msg.indexOf('token-123456'));
+            done();
+          });
+        });
+
+        request(app)
+          .post('/users')
+          .expect('Content-Type', /json/)
+          .expect(200)
+          .send({email: 'bar@bat.com', password: 'bar'})
+          .end(function(err, res) {
+            if (err) {
+              return done(err);
+            }
+          });
+      });
+
     });
 
     describe('User.confirm(options, fn)', function() {

@@ -391,7 +391,7 @@ module.exports = function(User) {
      */
     function defaultTokenGenerator(user, tokenCallback) {
       crypto.randomBytes(64, function(err, buf) {
-        tokenCallback( err || buf.toString('hex') );
+        tokenCallback(err || buf.toString('hex'));
       });
     }
 

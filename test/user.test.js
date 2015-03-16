@@ -853,9 +853,11 @@ describe('User', function() {
             redirect: '/',
             protocol: ctx.req.protocol,
             host: ctx.req.get('host'),
-            generateVerificationToken: function(cb) {
-              assert(this);
-              assert.equal(this.email, user.email);
+            generateVerificationToken: function(user, cb) {
+              assert(user);
+              assert.equal(user.email, 'bar@bat.com');
+              assert(cb);
+              assert.equal(typeof cb, 'function');
               // let's ensure async execution works on this one
               process.nextTick(function() {
                 cb(null, 'token-123456');
@@ -897,9 +899,7 @@ describe('User', function() {
             redirect: '/',
             protocol: ctx.req.protocol,
             host: ctx.req.get('host'),
-            generateVerificationToken: function(cb) {
-              assert(this);
-              assert.equal(this.email, user.email);
+            generateVerificationToken: function(user, cb) {
               // let's ensure async execution works on this one
               process.nextTick(function() {
                 cb(new Error('Fake error'));
@@ -910,6 +910,7 @@ describe('User', function() {
           user.verify(options, function(err, result) {
             assert(err);
             assert.equal(err.message, 'Fake error');
+            assert.equal(result, undefined);
             done();
           });
         });

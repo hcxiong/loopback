@@ -325,9 +325,8 @@ module.exports = function(User) {
    * @property {String} redirect Page to which user will be redirected after
    *  they verify their email, for example `'/'` for root URI.
    * @property {Function} generateVerificationToken A function to be used to
-   *  generate the verification token. It must accept a callback function as the
-   *  only argument The current `user` object will be set as the context (this)
-   *  inside the function. This function should NOT add the token to the user
+   *  generate the verification token. It must accept the user object and a
+   *  callback function. This function should NOT add the token to the user
    *  object, instead simply execute the callback with the token! User saving
    *  and email sending will be handled in the `verify()` method.
    */
@@ -370,7 +369,7 @@ module.exports = function(User) {
     // Set a default token generation function if one is not provided
     var tokenGenerator = options.generateVerificationToken || User.generateVerificationToken;
 
-    tokenGenerator.apply(user, [function(err, token) {
+    tokenGenerator(user, function(err, token) {
       if (err) { return fn(err); }
 
       user.verificationToken = token;
@@ -381,7 +380,7 @@ module.exports = function(User) {
           sendEmail(user);
         }
       });
-    }]);
+    });
 
     // TODO - support more verification types
     function sendEmail(user) {
@@ -410,14 +409,16 @@ module.exports = function(User) {
   };
 
   /**
-   * A default verification token generator which accepts a callback function.
+   * A default verification token generator which accepts the user the token is
+   * being generated for and a callback function to indicate completion.
    * This one uses the crypto library and 64 random bytes (converted to hex)
    * for the token. When used in combination with the user.verify() method this
    * function will be called with the `user` object as it's context (`this`).
    *
-   * @options {Function} cb The generator will pass back the new token with this function call
+   * @param {object} user The User this token is being generated for.
+   * @param {Function} cb The generator must pass back the new token with this function call
    */
-  User.generateVerificationToken = function(cb) {
+  User.generateVerificationToken = function(user, cb) {
     crypto.randomBytes(64, function(err, buf) {
       cb(err, buf && buf.toString('hex'));
     });

@@ -367,10 +367,12 @@ module.exports = function(User) {
     // Email model
     var Email = options.mailer || this.constructor.email || loopback.getModelByType(loopback.Email);
 
-    // Set a default token generation function if one is nto provided
+    // Set a default token generation function if one is not provided
     var tokenGenerator = options.generateVerificationToken || User.generateVerificationToken;
 
-    tokenGenerator.apply(user, [function(token) {
+    tokenGenerator.apply(user, [function(err, token) {
+      if (err) { return fn(err); }
+
       user.verificationToken = token;
       user.save(function(err) {
         if (err) {
@@ -413,11 +415,11 @@ module.exports = function(User) {
    * for the token. When used in combination with the user.verify() method this
    * function will be called with the `user` object as it's context (`this`).
    *
-   * @options {Function} tokenCallback The generator will pass back the new token with this function call
+   * @options {Function} cb The generator will pass back the new token with this function call
    */
-  User.generateVerificationToken = function(tokenCallback) {
+  User.generateVerificationToken = function(cb) {
     crypto.randomBytes(64, function(err, buf) {
-      tokenCallback(err || buf.toString('hex'));
+      cb(err, buf && buf.toString('hex'));
     });
   };
 
